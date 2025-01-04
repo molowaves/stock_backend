@@ -58,6 +58,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'stock_backend.wsgi.application'
+AUTH_USER_MODEL = 'core.User'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'dainigeria.CustomAuthenticationBackend.UsernameOrEmailBackend',
+)
 
 
 # Database
