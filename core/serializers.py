@@ -1,26 +1,46 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Profile
 
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-    
+class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['username', 'email', 'phone', 'password', 'password2']
-        extra_kwargs = {
-            'password':{'write_only':True}
-        }
+        model = Profile
+        exclude = ['user']
 
-    def save(self):
+
+class UserRegisterSerializer(serializers.Serializer):
+    fname = serializers.CharField(max_length=100)
+    lname = serializers.CharField(max_length=100)
+    mname = serializers.CharField(max_length=100, allow_blank=True)
+    address = serializers.CharField(max_length=500)
+    pic = serializers.ImageField()
+    username = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    phone = serializers.CharField(max_length=100)
+
+    def create(self, validated_data):
         user = User(username=self.validated_data['username'],
                     email = self.validated_data['email'],
                     phone =  self.validated_data['phone']
                     )
-        password = self.validated_data['password']
-        password2 = self.validated_data['password2']
+            
+        saved_user = user.save()
 
-        if password != password2:
-            raise serializers.ValidationError({'non_field_error':'Passwords did not match.'})
-        user.set_password(password)
-        user.save()
+        fname = self.validated_data.get('fname')
+        lname = self.validated_data.get('lname')
+        mname = self.validated_data.get('mname')
+        address = self.validated_data.get('address')
+        pic = self.validated_data.get('pic')
+
+        Profile.objects.create(user=user, fname=fname, lname=lname, 
+                               mname=mname, address=address, pic=pic
+                               )
         return user
+    
+    def to_representation(self, instance):
+        output = {
+            'username':instance.username,
+            'email':instance.email,
+            'fname':instance.profile.fname,
+            'lname':instance.profile.lname,
+        }
+        return output

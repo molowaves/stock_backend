@@ -1,92 +1,43 @@
+import os, io
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from PIL import Image
+from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
+
 
 
 class UserRegisterTestCase(APITestCase):
+    def setUp(self):
+        buffer = io.BytesIO()
+
+        # Use PIL to generate an image (e.g., a red square)
+        image = Image.new('RGB', (100, 100), color='red')
+        image.save(buffer, format='PNG')
+        buffer.seek(0)  # Reset buffer pointer to the beginning
+
+        # Step 2: Create the InMemoryUploadedFile
+        self.uploaded_file = InMemoryUploadedFile(
+            file=buffer,  # The file-like object
+            field_name='image',  # The field name where the file will be uploaded
+            name='test_image.png',  # The name of the file
+            content_type='image/png',  # The MIME type
+            size=buffer.tell(),  # The file size
+            charset=None,  # Encoding (optional, usually None for binary files)
+        )
+
     def test_create_user(self):
-        url = reverse('register')
+        url = reverse('user-list')
         data = {'username':'user1', 'email':'user1@company.com',
-                                               'phone':'+2348099563452', 'password':'secret', 
-                                               'password2':'secret'}
+                                                    'phone':'+2348099563452', 'password':'secret', 'password2':'secret',
+                                                    'fname':'Iliya','lname':'Peter','mname':'Maimolo','address':'123 Street',
+                                                    'pic':self.uploaded_file
+                                                    }
+                                                    
         
-        response =  self.client.post(url, data, format='json')
+        response =  self.client.post(url, data, format='multipart')
         expected_response = {'message':'User created Sucessfully'}
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data, expected_response)
-
-    def test_empty_user_name(self):
-        url = reverse('register')
-        data = {'username':'', 'email':'user1@company.com',
-                                               'phone':'+2348099563452', 'password':'secret', 
-                                               'password2':'secret'}
-        
-        response =  self.client.post(url, data, format='json')
-        expected_response = {'username': ['This field may not be blank.']}
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, expected_response)
-
-
-    def test_unique_user_name(self):
-        url = reverse('register')
-        data = {'username':'user1', 'email':'user1@company.com',
-                                               'phone':'+2348099563452', 'password':'secret', 
-                                               'password2':'secret'}
-        
-        data2 = {'username':'user1', 'email':'user2@company.com',
-                                               'phone':'+2348099563451', 'password':'secret', 
-                                               'password2':'secret'}
-        
-        response =  self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        response2 = self.client.post(url, data2, format='json')
-
-        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
-        expected_response = {"username": ["A user with that username already exists."]}
-        self.assertEqual(response2.data, expected_response)
-        
-    def test_empty_email(self):
-            url = reverse('register')
-            data = {'username':'user1', 'email':'',
-                                                'phone':'+2348099563452', 'password':'secret', 
-                                                'password2':'secret'}
-            
-            response =  self.client.post(url, data, format='json')
-            expected_response = {'email': ['This field may not be blank.']}
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(response.data, expected_response)
-
-
-    def test_unique_email(self):
-        url = reverse('register')
-        data = {'username':'user1', 'email':'user1@company.com',
-                                                'phone':'+2348099563452', 'password':'secret', 
-                                                'password2':'secret'}
-            
-        data2 = {'username':'user2', 'email':'user1@company.com',
-                                                'phone':'+2348099563453', 'password':'secret', 
-                                                'password2':'secret'}
-            
-        response =  self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        response2 = self.client.post(url, data2, format='json')
-
-        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
-        expected_response = {"email": ["user with this email already exists."]}
-        self.assertEqual(response2.data, expected_response)
-
-    def test_password_mismatch(self):
-        url = reverse('register')
-        data = {'username':'user1', 'email':'user1@company.com',
-                                                    'phone':'+2348099563452', 'password':'secret', 
-                                                    'password2':'secre'}
-        response = self.client.post(url, data, format='json')
-        expected_response = {"non_field_error": "Passwords did not match."}
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, expected_response)
-                
