@@ -1,6 +1,7 @@
 import random
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.http import urlsafe_base64_encode
 
 REG_STATUS = [
     ('R', 'registered'),
@@ -9,8 +10,8 @@ REG_STATUS = [
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20)
-    reg_status = models.CharField(max_length=2, choices=REG_STATUS)
+    phone = models.CharField(max_length=20, unique=True)
+    reg_status = models.CharField(max_length=2, choices=REG_STATUS, default='P')
     
     def __str__(self):
         return self.username
@@ -18,7 +19,7 @@ class User(AbstractUser):
 
 class OneTimePassword(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    OTP = models.CharField(max_length=50, default=random.randrange(100000, 999999), blank=True)
+    OTP = models.CharField(max_length=50, default=urlsafe_base64_encode(str(random.randrange(100000, 999999)).encode('utf-8')))
 
     def __str__(self):
         return self.OTP

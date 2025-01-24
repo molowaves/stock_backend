@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'rest_framework'
+    'rest_framework',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -63,7 +64,7 @@ AUTH_USER_MODEL = 'core.User'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'dainigeria.CustomAuthenticationBackend.UsernameOrEmailBackend',
+    'stock_backend.CustomAuthBackend.UsernameOrEmailOrPhoneBackend',
 )
 
 

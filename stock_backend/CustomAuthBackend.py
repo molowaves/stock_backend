@@ -13,7 +13,7 @@ class UsernameOrEmailOrPhoneBackend(object):
             return
         try:
             user = UserModel.objects.get(
-                Q(email=username) | Q(username=username)) |Q(phone=username)
+                Q(email=username) | Q(username=username) | Q(phone=username)) 
         except UserModel.DoesNotExist:
             # Run the default password hasher once to reduce the timing
             # difference between an existing and a nonexistent user (#20760).
