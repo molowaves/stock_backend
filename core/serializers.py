@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Q
-from .models import User, Profile, OneTimePassword
+from .models import User, Profile, OneTimePassword, Store
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -58,6 +58,12 @@ class VerifyRegistrationSerializer(serializers.Serializer):
 
         return user
     
+
+
+class StoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Store
+        fields = '__all__'
 
        
     
