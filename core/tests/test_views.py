@@ -87,10 +87,10 @@ class RegistrationTestCase(APITestCase):
         mock_send_reg_otp.assert_not_called()
 
 
-    def tearDown(self):
-       files = os.path.join(settings.MEDIA_ROOT, "emp", "passports")
-       for file in os.listdir(files):
-           os.remove(os.path.join(files, file))
+    # def tearDown(self):
+    #    files = os.path.join(settings.MEDIA_ROOT, "emp", "passports")
+    #    for file in os.listdir(files):
+    #        os.remove(os.path.join(files, file))
 
 
 class RegistrationVerificationTestCase(APITestCase):
