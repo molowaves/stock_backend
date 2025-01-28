@@ -5,8 +5,10 @@ from rest_framework.decorators import api_view, permission_classes
 from django.db.models import Q
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
-from .models import User, OneTimePassword
-from .serializers import RegisterSerializer, ProfileSerializer, VerifyRegistrationSerializer
+from .models import User, OneTimePassword, Store
+from .serializers import (RegisterSerializer, ProfileSerializer, 
+                          VerifyRegistrationSerializer, StoreSerializer
+                          )
 from .utils import send_reg_otp
 
 @api_view(['POST'])
@@ -69,8 +71,19 @@ def verify_registration(request):
                 return Response({'non_field_error':'User does not exists'})
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        
 
-# add to employees group
-# register through sms
+
+
+class StoreViewSet(viewsets.ModelViewSet):
+    queryset = Store.objects.all()
+    serializer_class = StoreSerializer
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            permission_classes = [permissions.IsAdminUser]
+        return [permission() for permission in permission_classes]
