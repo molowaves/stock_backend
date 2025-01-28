@@ -3,6 +3,7 @@ from django.db.models import Q
 from .models import User, Profile, OneTimePassword, Store
 
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -64,7 +65,6 @@ class StoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
         fields = '__all__'
-
        
     
     
