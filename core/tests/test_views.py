@@ -9,8 +9,10 @@ from django.utils.http import urlsafe_base64_decode
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 
-from ..serializers import RegisterSerializer
-from ..models import User, OneTimePassword, Profile
+
+from ..serializers import RegisterSerializer, StoreSerializer
+from ..models import User, OneTimePassword, Profile, Store
+
 
 
 class RegistrationTestCase(APITestCase):
@@ -87,12 +89,6 @@ class RegistrationTestCase(APITestCase):
         mock_send_reg_otp.assert_not_called()
 
 
-    # def tearDown(self):
-    #    files = os.path.join(settings.MEDIA_ROOT, "emp", "passports")
-    #    for file in os.listdir(files):
-    #        os.remove(os.path.join(files, file))
-
-
 class RegistrationVerificationTestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create(username='user1', email='user1@company.com', 
@@ -140,4 +136,85 @@ class RegistrationVerificationTestCase(APITestCase):
         response = self.client.put(url, self.passwords_mismatch)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual({'non_field_error': 'Password mismatch.'}, response.data)
+    
+
+
+class StoreTestCase(APITestCase):
+    def setUp(self):
+        self.store = Store.objects.create(name='Maraba', location='By AP filling station')
+        self.admin_user = User.objects.create_superuser(email='superuser@gmail.com', 
+                                                  password='secret', username='username')
+        
+        self.non_admin_user = User.objects.create_user(email='normal@gmail.com', password='secret', 
+                                username='normalusername', phone='+2349122334455')
+
+        self.data = {
+            'name':'First store',
+            'location':'Kujama'
+        }
+
+
+
+    def test_list_stores_admin_user(self):
+        self.client.force_login(user=self.admin_user)
+        url = reverse('store-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        serializer =  StoreSerializer([self.store], many=True)
+        self.assertEqual(response.data, serializer.data)
+
+
+
+    def test_retrieve_store(self):
+        self.client.force_login(user=self.non_admin_user)
+        url =  reverse('store-detail', kwargs={'pk':1})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        serializer = StoreSerializer(self.store)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_create_store_success(self):
+        self.client.force_login(user=self.admin_user)
+        url =  reverse('store-list')
+        response = self.client.post(url, self.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        expected_output = {'id':2, **self.data}
+        self.assertEqual(response.data, expected_output)
+    
+
+    def test_create_store_failure(self):
+        self.client.force_login(user=self.non_admin_user)
+        url =  reverse('store-list')
+        response = self.client.post(url, self.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_store_success(self):
+        self.client.force_login(user=self.admin_user)
+        url =  reverse('store-detail', kwargs={'pk':1})
+        data = {'id':1, **self.data}
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, data)
+
+
+    def test_update_store_failure(self):
+        self.client.force_login(user=self.non_admin_user)
+        url =  reverse('store-detail', kwargs={'pk':1})
+        data = {'id':1, **self.data}
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+    def test_delete_store_success(self):
+        self.client.force_login(user=self.admin_user)
+        url =  reverse('store-detail', kwargs={'pk':1})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    
+    def test_update_store_failure(self):
+        self.client.force_login(user=self.non_admin_user)
+        url =  reverse('store-detail', kwargs={'pk':1})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     
