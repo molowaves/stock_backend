@@ -9,8 +9,10 @@ from django.utils.http import urlsafe_base64_decode
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 
+
 from ..serializers import RegisterSerializer, StoreSerializer
 from ..models import User, OneTimePassword, Profile, Store
+
 
 
 class RegistrationTestCase(APITestCase):
@@ -215,3 +217,4 @@ class StoreTestCase(APITestCase):
         url =  reverse('store-detail', kwargs={'pk':1})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    

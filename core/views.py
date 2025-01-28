@@ -9,6 +9,7 @@ from .models import User, OneTimePassword, Store
 from .serializers import (RegisterSerializer, ProfileSerializer, 
                           VerifyRegistrationSerializer, StoreSerializer
                           )
+
 from .utils import send_reg_otp
 
 @api_view(['POST'])

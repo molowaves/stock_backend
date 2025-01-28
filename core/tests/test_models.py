@@ -2,6 +2,7 @@ from django.test import TestCase
 from ..models import User, Profile, OneTimePassword, Store
 
 
+
 class UserModelTestCase(TestCase):
     def setUp(self):
         User.objects.create_user(username='user1', email='user1@company.com', 
@@ -51,7 +52,6 @@ class OneTimePasswordModelTestCase(TestCase):
         OTP = OneTimePassword.objects.get(pk=1)
         expected_object_name =  str(self.otp.OTP)
         self.assertEqual(str(OTP), expected_object_name)
-
          
 
 
