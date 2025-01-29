@@ -11,7 +11,7 @@ class TokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
 
         # Add custom claims
-        token['isAdminUser'] = user.IsAdmin
+        token['isAdminUser'] = user.is_staff
 
         return token
 
