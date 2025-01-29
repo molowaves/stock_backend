@@ -9,9 +9,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+
 router =  DefaultRouter()
 router.register(r'stores', views.StoreViewSet)
-
 
 urlpatterns = [
     path('', include(router.urls)),

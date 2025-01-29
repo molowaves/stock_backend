@@ -16,7 +16,6 @@ from ..models import User, OneTimePassword, Profile, Store
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-
 class RegistrationTestCase(APITestCase):
     def generate_test_image(self):
         image = Image.new('RGB', (100, 100), color='blue')
@@ -152,8 +151,7 @@ class StoreTestCase(APITestCase):
         refresh =  RefreshToken.for_user(self.admin_user)
         self.access_token = str(refresh.access_token)
 
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
-        
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')        
         self.non_admin_user = User.objects.create_user(email='normal@gmail.com', password='secret', 
                                 username='normalusername', phone='+2349122334455')
 
@@ -191,6 +189,7 @@ class StoreTestCase(APITestCase):
         self.access_token = str(refresh.access_token)
 
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.force_login(user=self.admin_user)
 
         url =  reverse('store-list')
         response = self.client.post(url, self.data)
@@ -236,7 +235,7 @@ class StoreTestCase(APITestCase):
         refresh =  RefreshToken.for_user(self.admin_user)
         self.access_token = str(refresh.access_token)
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
-
+        
         url =  reverse('store-detail', kwargs={'pk':1})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -250,3 +249,9 @@ class StoreTestCase(APITestCase):
         url =  reverse('store-detail', kwargs={'pk':1})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_login(user=self.non_admin_user)
+        url =  reverse('store-detail', kwargs={'pk':1})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+ 
