@@ -13,6 +13,7 @@ from django.conf import settings
 from ..serializers import RegisterSerializer, StoreSerializer
 from ..models import User, OneTimePassword, Profile, Store
 
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class RegistrationTestCase(APITestCase):
@@ -27,8 +28,11 @@ class RegistrationTestCase(APITestCase):
     def setUp(self):
         self.admin_user = User.objects.create_superuser(email='superuser@gmail.com', 
                                                   password='secret', username='username')
-        
-        self.client.force_login(user=self.admin_user)
+
+        refresh =  RefreshToken.for_user(self.admin_user)
+        self.access_token = str(refresh.access_token)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         image = self.generate_test_image()
  
         self.simpleuploadedfile = SimpleUploadedFile(
@@ -83,7 +87,6 @@ class RegistrationTestCase(APITestCase):
         """Test registration failure with invalid data"""
         url = reverse('register')
         response = self.client.post(url, self.invalid_data)
-
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('email', response.data)
         mock_send_reg_otp.assert_not_called()
@@ -144,7 +147,11 @@ class StoreTestCase(APITestCase):
         self.store = Store.objects.create(name='Maraba', location='By AP filling station')
         self.admin_user = User.objects.create_superuser(email='superuser@gmail.com', 
                                                   password='secret', username='username')
-        
+
+        refresh =  RefreshToken.for_user(self.admin_user)
+        self.access_token = str(refresh.access_token)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')        
         self.non_admin_user = User.objects.create_user(email='normal@gmail.com', password='secret', 
                                 username='normalusername', phone='+2349122334455')
 
@@ -166,7 +173,11 @@ class StoreTestCase(APITestCase):
 
 
     def test_retrieve_store(self):
-        self.client.force_login(user=self.non_admin_user)
+        refresh =  RefreshToken.for_user(self.non_admin_user)
+        self.access_token = str(refresh.access_token)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
         url =  reverse('store-detail', kwargs={'pk':1})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -174,7 +185,12 @@ class StoreTestCase(APITestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_create_store_success(self):
+        refresh =  RefreshToken.for_user(self.admin_user)
+        self.access_token = str(refresh.access_token)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.client.force_login(user=self.admin_user)
+
         url =  reverse('store-list')
         response = self.client.post(url, self.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -183,13 +199,20 @@ class StoreTestCase(APITestCase):
     
 
     def test_create_store_failure(self):
-        self.client.force_login(user=self.non_admin_user)
+        refresh =  RefreshToken.for_user(self.non_admin_user)
+        self.access_token = str(refresh.access_token)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
         url =  reverse('store-list')
         response = self.client.post(url, self.data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_store_success(self):
-        self.client.force_login(user=self.admin_user)
+        refresh =  RefreshToken.for_user(self.admin_user)
+        self.access_token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
         url =  reverse('store-detail', kwargs={'pk':1})
         data = {'id':1, **self.data}
         response = self.client.put(url, data)
@@ -198,7 +221,10 @@ class StoreTestCase(APITestCase):
 
 
     def test_update_store_failure(self):
-        self.client.force_login(user=self.non_admin_user)
+        refresh =  RefreshToken.for_user(self.non_admin_user)
+        self.access_token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
         url =  reverse('store-detail', kwargs={'pk':1})
         data = {'id':1, **self.data}
         response = self.client.put(url, data)
@@ -206,15 +232,26 @@ class StoreTestCase(APITestCase):
 
 
     def test_delete_store_success(self):
-        self.client.force_login(user=self.admin_user)
+        refresh =  RefreshToken.for_user(self.admin_user)
+        self.access_token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        
         url =  reverse('store-detail', kwargs={'pk':1})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     
     def test_update_store_failure(self):
+        refresh =  RefreshToken.for_user(self.non_admin_user)
+        self.access_token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
+        url =  reverse('store-detail', kwargs={'pk':1})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
         self.client.force_login(user=self.non_admin_user)
         url =  reverse('store-detail', kwargs={'pk':1})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-    
+ 
